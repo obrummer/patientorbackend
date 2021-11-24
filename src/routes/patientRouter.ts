@@ -9,6 +9,17 @@ router.get("/", (_req, res) => {
   res.send(patientService.getNonSensitiveEntries());
 });
 
+router.get("/:id", (req, res) => {
+  const diary = patientService.findById(req.params.id);
+
+  if (diary) {
+    const diary = patientService.findById(req.params.id);
+    res.send(diary);
+  } else {
+    res.sendStatus(404);
+  }
+});
+
 router.post("/", (req, res) => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
