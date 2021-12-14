@@ -5,6 +5,7 @@ import {
   PatientEntry,
   NonSensitivePatientEntry,
   NewPatientEntry,
+  Entry,
 } from "../types";
 
 const getEntries = (): Array<PatientEntry> => {
@@ -41,8 +42,17 @@ const addPatient = (entry: NewPatientEntry): NonSensitivePatientEntry => {
   return safePatientEntry;
 };
 
-const addEntry = () => {
-  return null;
+const addEntry = (
+  visitEntry: Entry,
+  patientId: string
+): PatientEntry | undefined => {
+  const activePatient = patients.find((patient) => patient.id === patientId);
+
+  activePatient?.entries.push(visitEntry);
+  patients.map((patient) =>
+    patient.id === patientId ? activePatient : patient
+  );
+  return activePatient;
 };
 
 export default {

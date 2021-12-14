@@ -1,4 +1,17 @@
-import { NewPatientEntry, Entry, Gender } from "./types";
+import {
+  NewPatientEntry,
+  // NewVisitEntry,
+  Entry,
+  Gender,
+  Type,
+  DiagnoseEntry,
+  HospitalEntry,
+  Discharge,
+  OccupationalHealthcareEntry,
+  HealthCheckEntry,
+  HealthCheckRating,
+} from "./types";
+import { v1 as uuid } from "uuid";
 
 const isString = (text: unknown): text is string => {
   return typeof text === "string" || text instanceof String;
@@ -36,6 +49,19 @@ const parseGender = (gender: unknown): Gender => {
   return gender;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const isType = (param: any): param is Type => {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+  return Object.values(Type).includes(param);
+};
+
+const parseType = (type: unknown): Type => {
+  if (!type || !isType(type)) {
+    throw new Error("Incorrect or missing type: " + type);
+  }
+  return type;
+};
+
 type Fields = {
   name: unknown;
   dateOfBirth: unknown;
@@ -45,7 +71,7 @@ type Fields = {
   entries: Entry[];
 };
 
-const toNewPatientEntry = ({
+export const toNewPatientEntry = ({
   name,
   dateOfBirth,
   ssn,
@@ -65,4 +91,66 @@ const toNewPatientEntry = ({
   return newEntry;
 };
 
-export default toNewPatientEntry;
+type VisitEntryFields = {
+  date: unknown;
+  type: unknown;
+  specialist: unknown;
+  description: unknown;
+  diagnosisCodes: Array<DiagnoseEntry["code"]>;
+  discharge: Discharge;
+  employerName: unknown;
+  healthCheckRating: HealthCheckRating;
+};
+
+export const toNewVisitEntry = ({
+  date,
+  type,
+  specialist,
+  diagnosisCodes,
+  description,
+  discharge,
+  employerName,
+  healthCheckRating,
+}: VisitEntryFields):
+  | HospitalEntry
+  | OccupationalHealthcareEntry
+  | HealthCheckEntry
+  | undefined => {
+  const currentType = parseType(type);
+
+  switch (currentType) {
+    case Type.Hospital:
+      const newHospitalEntry: HospitalEntry = {
+        date: parseDate(date),
+        type: "Hospital",
+        specialist: parseString(specialist),
+        description: parseString(description),
+        diagnosisCodes,
+        id: uuid(),
+        discharge,
+      };
+      return newHospitalEntry;
+    case Type.OccupationalHealthcare:
+      const newOccupationalEntry: OccupationalHealthcareEntry = {
+        date: parseDate(date),
+        type: "OccupationalHealthcare",
+        specialist: parseString(specialist),
+        employerName: parseString(employerName),
+        description: parseString(description),
+        diagnosisCodes,
+        id: uuid(),
+      };
+      return newOccupationalEntry;
+    case Type.HealthCheck:
+      const newHealthEntry: HealthCheckEntry = {
+        date: parseDate(date),
+        type: "HealthCheck",
+        specialist: parseString(specialist),
+        description: parseString(description),
+        diagnosisCodes,
+        id: uuid(),
+        healthCheckRating,
+      };
+      return newHealthEntry;
+  }
+};
